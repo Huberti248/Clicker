@@ -207,6 +207,7 @@ int SDL_RenderFillCircle(SDL_Renderer* renderer, int x, int y, int radius)
                          
                          Text coins;
                          int power=1;
+                         int formulas=0;
                          
                          int eventWatch(void* userdata, SDL_Event* event)
 {
@@ -217,12 +218,15 @@ int SDL_RenderFillCircle(SDL_Renderer* renderer, int x, int y, int radius)
     <<coins.text
     <<std::endl
     <<power
+    <<std::endl
+    <<formulas
     <<std::endl;
 	}
 	return 0;
 }
 
 int firstItemPrice=100;
+int secondItemPrice=200;
 
 int main(int argc, char *argv[])
 {
@@ -253,12 +257,13 @@ SDL_AddEventWatch(eventWatch, 0);
         coins.setText(tmp);
         std::getline(ifs,tmp);
         power=std::stoi(tmp);
+        std::getline(ifs,tmp);
+        formulas=std::stoi(tmp);
         		}
         		else{
         				coins.setText("0");
         		}       			        	SDL_QueryTextureF(coins.t,0,0,&coins.r.w,0);
         	coins.r.w/=10;        	}
-
         	#if 1 // NOTE: Shop
         	Text firstItemText;
         	firstItemText.setText("+1");
@@ -272,12 +277,31 @@ SDL_AddEventWatch(eventWatch, 0);
         	firstItemPriceText.r.h=40;
         	firstItemPriceText.r.x=firstItemText.r.x+firstItemText.r.w/2-firstItemPriceText.r.w/2;
             firstItemPriceText.r.y=firstItemText.r.y+firstItemText.r.h;
-            Text buyText;
-        	buyText.setText("buy");
-        	buyText.r.w=60;
-        	buyText.r.h=40;
-        	buyText.r.x=firstItemText.r.x+firstItemText.r.w/2-buyText.r.w/2;
-            buyText.r.y=firstItemPriceText.r.y+firstItemPriceText.r.h+5;
+Text firstItemBuyText;
+        	firstItemBuyText.setText("buy");
+        	firstItemBuyText.r.w=60;
+        	firstItemBuyText.r.h=40;
+        	firstItemBuyText.r.x=firstItemText.r.x+firstItemText.r.w/2-firstItemBuyText.r.w/2;
+            firstItemBuyText.r.y=firstItemPriceText.r.y+firstItemPriceText.r.h+5;
+            
+            Text secondItemText;
+        	secondItemText.setText("formula");
+        	secondItemText.r.w=100;
+        	secondItemText.r.h=30;
+        	secondItemText.r.x=firstItemText.r.x+firstItemText.r.w;
+            secondItemText.r.y=0;
+            Text secondItemPriceText;
+            secondItemPriceText.setText("Price: "+std::to_string(secondItemPrice));
+        	secondItemPriceText.r.w=150;
+        	secondItemPriceText.r.h=40;
+        	secondItemPriceText.r.x=secondItemText.r.x+secondItemText.r.w/2-secondItemPriceText.r.w/2;
+            secondItemPriceText.r.y=secondItemText.r.y+secondItemText.r.h;
+Text secondItemBuyText;
+        	secondItemBuyText.setText("buy");
+        	secondItemBuyText.r.w=60;
+        	secondItemBuyText.r.h=40;
+        	secondItemBuyText.r.x=secondItemText.r.x+secondItemText.r.w/2-secondItemBuyText.r.w/2;
+            secondItemBuyText.r.y=secondItemPriceText.r.y+secondItemPriceText.r.h+5;
             #endif
     while (1) {
         if(state==State::Game){
@@ -305,6 +329,15 @@ SDL_AddEventWatch(eventWatch, 0);
 		SDL_RenderClear(renderer);
 		coins.draw();	
 		SDL_RenderCopy(renderer,shopT,0,&shopBtnR);
+		Text firstFormulaText;
+		firstFormulaText.setText("an=a1+(n-1)r");
+		firstFormulaText.r.w=100;
+		firstFormulaText.r.h=30;
+		firstFormulaText.r.x=100;
+		firstFormulaText.r.y=100;
+		if(formulas>=1){
+		firstFormulaText.draw();
+		}
         SDL_RenderPresent(renderer);
     }    
     else if(state==State::Shop){
@@ -322,15 +355,25 @@ SDL_AddEventWatch(eventWatch, 0);
         	if(SDL_PointInRect(&mousePos,&shopBtnR)){
         		state=State::Game;
         	}
-        	else if(SDL_PointInFRect(&mousePos,&buyText.r)){
+        	else if(SDL_PointInFRect(&mousePos,&firstItemBuyText.r)){
         		int c=std::stoi(coins.text);
         		if(c>=firstItemPrice){
         			c-=firstItemPrice;
         			++power;
         		}
-        		coins.setText(std::to_string(c));
+        		        		coins.setText(std::to_string(c));
         		        	SDL_QueryTextureF(coins.t,0,0,&coins.r.w,0);
        		coins.r.w/=10;
+        	}
+        		        	else if(SDL_PointInFRect(&mousePos,&secondItemBuyText.r)){
+        		int c=std::stoi(coins.text);
+        		if(c>=secondItemPrice){
+        			c-=secondItemPrice;
+        			++formulas;
+        		}   
+        		        		coins.setText(std::to_string(c));
+        		        	SDL_QueryTextureF(coins.t,0,0,&coins.r.w,0);
+       		coins.r.w/=10;    		        	
         }
         }	SDL_SetRenderDrawColor(renderer,0,0,0,0);
 		SDL_RenderClear(renderer);
@@ -338,19 +381,22 @@ SDL_AddEventWatch(eventWatch, 0);
 		SDL_RenderFillRect(renderer,&shopBtnR);
 		firstItemText.draw();
 		firstItemPriceText.draw();
-		buyText.draw();
-		Text coinsText;
-		coinsText.setText("Coins: "+coins.text);
-		coinsText.r.w=110;
-		coinsText.r.h=30;
-		coinsText.r.x=windowWidth/2-coinsText.r.w/2;
-		coinsText.r.y=0;
+		firstItemBuyText.draw();
+		secondItemText.draw();
+		secondItemPriceText.draw();
+		secondItemBuyText.draw();
 		Text powerText;
 		powerText.setText("Power: "+std::to_string(power));
 		powerText.r.w=110;
 		powerText.r.h=30;
 		powerText.r.x=windowWidth/2-powerText.r.w/2;
-		powerText.r.y=coinsText.r.y+coinsText.r.h+2;
+		powerText.r.y=windowHeight-powerText.r.h;
+		Text coinsText;
+		coinsText.setText("Coins: "+coins.text);
+		coinsText.r.w=110;
+		coinsText.r.h=30;
+		coinsText.r.x=windowWidth/2-coinsText.r.w/2;
+		coinsText.r.y=powerText.r.y-coinsText.r.h;
 		coinsText.draw();
 		powerText.draw();
         SDL_RenderPresent(renderer);
